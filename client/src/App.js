@@ -3,12 +3,12 @@ import { Send, User, Bot } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 const ChatMessage = ({ message }) => (
-  <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-    <div className={`flex gap-3 max-w-3xl ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+  <div className={`flex gap-3`}>
+    <div className={`flex gap-3 max-w-3xl 'flex-row`}>
       <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-100">
         {message.role === 'user' ? <User size={16} /> : <Bot size={16} />}
       </div>
-      <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+      <div className={`flex flex-col`}>
         <div className={`rounded-lg px-4 py-2 ${
           message.role === 'user' 
             ? 'bg-blue-600 text-white' 

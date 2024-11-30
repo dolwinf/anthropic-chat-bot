@@ -1,7 +1,12 @@
 import httpx
+import anthropic
+import os
+import json
+
+client = anthropic.Anthropic(api_key=os.getenv("SONNET_API_KEY"))
 
 
-def get_reddit_threads():
+def get_bard_reddit_threads():
     bard_thread_proccessed_data = []
     bard = httpx.get('https://www.reddit.com/r/Bard.json')
     bard_threads = bard.json()
@@ -21,8 +26,15 @@ def get_reddit_threads():
         bard_thread_proccessed_data.append(
             {"title": thread_title, "content": thread_sub_data_content_body})
 
-    print(bard_thread_proccessed_data)
+    with client.messages.stream(
+        max_tokens=1024,
+        messages=[{
+            "role": "user",
+                    "content": json.dumps(bard_thread_proccessed_data)
+        }],
+        model="claude-3-5-sonnet-20241022",
+        system="You are a summary agent and have been provided with data from reddit. Analyse the information in the array and summarise the data"
+    ) as stream:
+        for text in stream.text_stream:
 
-
-if __name__ == "__main__":
-    get_reddit_threads()
+            yield text
