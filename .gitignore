@@ -1,0 +1,38 @@
+# Client - React
+/client/node_modules
+/client/.pnp
+/client/.pnp.js
+/client/coverage
+/client/build
+/client/dist
+/client/.env
+/client/.env.local
+/client/.env.development.local
+/client/.env.test.local
+/client/.env.production.local
+/client/npm-debug.log*
+/client/yarn-debug.log*
+/client/yarn-error.log*
+
+# Server - Python
+/server/__pycache__/
+/server/*.py[cod]
+/server/*$py.class
+/server/venv/
+/server/.env
+/server/.venv
+/server/build/
+/server/dist/
+/server/*.egg-info/
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Misc
+.env
+.env.local
+env.ps1
