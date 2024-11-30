@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import anthropic
 import os
+import uvicorn
 
 app = FastAPI()
 client = anthropic.Anthropic(api_key=os.getenv("SONNET_API_KEY"))
@@ -42,6 +43,4 @@ def chat_endpoint(query: ChatMessage):
     return StreamingResponse(generate_response(), media_type="text/plain")
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
