@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Mic } from 'lucide-react'; // Added Mic icon
+import { Send, User, Bot } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 const ChatMessage = ({ message }) => (
@@ -27,11 +27,9 @@ const ChatUI = () => {
   }]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [conversationId] = useState(() => uuidv4());
   const messagesEndRef = useRef(null);
   const abortControllerRef = useRef(null);
-  const recognitionRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -40,49 +38,6 @@ const ChatUI = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.interimResults = true;
-      recognition.continuous = false;
-
-      recognition.onstart = () => {
-        setIsRecording(true);
-      };
-
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join('');
-        setInput(transcript);
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-      };
-
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
-
-      recognitionRef.current = recognition;
-    } else {
-      console.error('Speech recognition is not supported in this browser.');
-    }
-  }, []);
-
-  const handleMicClick = () => {
-    if (recognitionRef.current) {
-      if (isRecording) {
-        recognitionRef.current.stop();
-      } else {
-        recognitionRef.current.start();
-      }
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -110,19 +65,25 @@ const ChatUI = () => {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
      
+      
       const contentRef = { current: '' };
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
         
         const chunk = decoder.decode(value);
-        contentRef.current += chunk;
+        contentRef.current += chunk
         setMessages(prev => {
-          const newMessages = [...prev];
-          newMessages[newMessages.length - 1].content = contentRef.current;
-          return newMessages;
-        });
-      }
+           
+            const newMessages = [...prev];
+            newMessages[newMessages.length - 1].content = contentRef.current;
+            return newMessages;
+        }
+       );    
+        }
+          
+        
+       
     } catch (error) {
       if (error.name === 'AbortError') {
         console.log('Request aborted');
@@ -145,15 +106,17 @@ const ChatUI = () => {
         <h1 className="text-xl font-semibold">Chat Assistant</h1>
       </div>
 
+      
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages?.map((message, index) => (
-          <ChatMessage key={index} message={message} />
+        {messages?.map((message) => (
+          <ChatMessage message={message} />
         ))}
         <div ref={messagesEndRef} />
       </div>
 
+     
       <div className="flex-none p-4 border-t">
-        <form onSubmit={handleSubmit} className="flex gap-2 items-center">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"
             value={input}
@@ -162,22 +125,6 @@ const ChatUI = () => {
             className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={isLoading}
           />
-          <button
-            type="button"
-            onClick={handleMicClick}
-            className={`p-2 rounded-lg ${isRecording ? 'bg-red-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`}
-            disabled={isLoading}
-          >
-            {isRecording ? (
-              <div className="wave-container">
-                <div className="wave"></div>
-                <div className="wave"></div>
-                <div className="wave"></div>
-              </div>
-            ) : (
-              <Mic size={20} />
-            )}
-          </button>
           <button
             type="submit"
             disabled={isLoading}
