@@ -1,14 +1,14 @@
 {
-    "projects": [
+  "version": 2,
+  "buildCommand": "cd client && npm install && npm run build",
+  "builds": [
       {
-        "name": "frontend",
-        "rootDirectory": "client/build"
+          "src": "/server/main.py",
+          "use": "@vercel/python"
       },
       {
-        "name": "backend",
-        "rootDirectory": "server/api",
-        "framework": "python"
+          "src": "/client/build/**",
+          "use": "@vercel/static"
       }
-    ]
-  }
-  
+  ]
+}
