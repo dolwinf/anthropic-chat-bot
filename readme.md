@@ -20,3 +20,6 @@ A simple full stack chatbot application built with React and FastAPI, powered by
 - Node.js 20+
 - Python 3.11+
 - Anthropic API key
+
+###
+local .env: REACT_APP_API_URL=http://localhost:8000

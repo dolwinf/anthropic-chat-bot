@@ -1,13 +1,14 @@
 {
-  "version": 2,
-  "builds": [
+    "projects": [
       {
-          "src": "/server/main.py",
-          "use": "@vercel/python"
+        "name": "frontend",
+        "rootDirectory": "client/build"
       },
       {
-          "src": "/client/build/**",
-          "use": "@vercel/static"
+        "name": "backend",
+        "rootDirectory": "server/api",
+        "framework": "python"
       }
-  ] 
-}
+    ]
+  }
+  
