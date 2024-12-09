@@ -11,13 +11,14 @@ headers = {
 }
 
 
-def get_bard_reddit_threads():
-    bard_thread_proccessed_data = []
-    yield "\n\n Fetching top 5 titles from r/Bard"
-    bard = httpx.get('https://www.reddit.com/r/Bard.json', headers=headers)
-    bard_threads = bard.json()
+def get_openai_reddit_threads():
+    openai_thread_proccessed_data = []
+    yield "\n\n Fetching top 7 titles from r/OpenAI"
+    openai_res = httpx.get(
+        'https://www.reddit.com/r/OpenAI.json', headers=headers)
+    openai_threads = openai_res.json()
 
-    for thread in bard_threads["data"]["children"][0:5]:
+    for thread in openai_threads["data"]["children"][0:8]:
         thread_title = thread["data"]["title"]
         yield f"\n\n Content: {thread_title}"
         thread_sub_data_url = thread["data"]["permalink"].rsplit(
@@ -32,7 +33,7 @@ def get_bard_reddit_threads():
         thread_sub_data_content_body = thread_sub_data_content[
             0]["data"]["children"][0]["data"]["selftext"]
 
-        bard_thread_proccessed_data.append(
+        openai_thread_proccessed_data.append(
             {"title": thread_title, "content": thread_sub_data_content_body})
 
     yield "\n\n Collected data, summarising content....."
@@ -41,7 +42,7 @@ def get_bard_reddit_threads():
         max_tokens=1024,
         messages=[{
             "role": "user",
-                    "content": json.dumps(bard_thread_proccessed_data)
+                    "content": json.dumps(openai_thread_proccessed_data)
         }],
         model="claude-3-5-sonnet-20241022",
         system="You are a summary agent and have been provided with data from reddit. Analyse the information in the array and summarise the data"

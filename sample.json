@@ -1,0 +1,41 @@
+[
+    {
+      "parent": {
+        "metadata": {
+          "title": "Malware control",
+          "source_document": "standards.pdf",
+          "page_number": 4
+        },
+        "content": {
+          "id": "CONTROL_1",
+          "data": "This is an Malware control and its structure.",
+          "relationships": [
+            {
+              "id": "PRES_1",
+              "type": "RELATES_TO"
+            },
+            {
+              "id": "content_id_3",
+              "type": "references"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "parent": {
+        "metadata": {
+          "readable_id": "PRES_1",
+          "title": "Risk Control and Self Assessment",
+          "source_document": "rcsa_guide.pdf",
+          "page_number": 5
+        },
+        "content": {
+          "id": "content_id_2",
+          "data": "This section contains a part or section of data from the rcsa guide.",
+          "relationships": []
+        }
+      }
+    }    
+  ]
+  

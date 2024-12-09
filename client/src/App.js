@@ -1,29 +1,150 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Mic } from 'lucide-react'; // Added Mic icon
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import { User, Bot, Copy, Check, Send, Mic } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
-const ChatMessage = ({ message }) => (
-  <div className={`flex gap-3`}>
-    <div className={`flex gap-3 max-w-3xl 'flex-row`}>
-      <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-100">
-        {message.role === 'user' ? <User size={16} /> : <Bot size={16} />}
-      </div>
-      <div className={`flex flex-col`}>
-        <div className={`rounded-lg px-4 py-2 ${
-          message.role === 'user' 
-            ? 'bg-blue-600 text-white' 
-            : 'bg-gray-100 text-gray-900'
-        }`}>
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+const ChatMessage = ({ message, isStreaming }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text:', err);
+    }
+  };
+
+  // Custom renderers for different markdown elements
+  const components = {
+    code({ node, inline, className, children, ...props }) {
+      const match = /language-(\w+)/.exec(className || '');
+      const language = match ? match[1] : '';
+      
+      return !inline ? (
+        <div className="my-4">
+          <SyntaxHighlighter
+            language={language}
+            style={nord}
+            PreTag="div"
+            className="rounded-lg"
+            {...props}
+          >
+            {String(children).replace(/\n$/, '')}
+          </SyntaxHighlighter>
+        </div>
+      ) : (
+        <code className="bg-gray-100 px-1 rounded text-sm" {...props}>
+          {children}
+        </code>
+      );
+    },
+    
+    table({ children }) {
+      return (
+        <div className="my-4 overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            {children}
+          </table>
+        </div>
+      );
+    },
+    
+    thead({ children }) {
+      return <thead className="bg-gray-50">{children}</thead>;
+    },
+    
+    th({ children }) {
+      return (
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          {children}
+        </th>
+      );
+    },
+    
+    td({ children }) {
+      return <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{children}</td>;
+    },
+    
+    p({ children }) {
+      return <p className="mb-4 last:mb-0">{children}</p>;
+    },
+    
+    ul({ children }) {
+      return <ul className="list-disc pl-6 mb-4">{children}</ul>;
+    },
+    
+    ol({ children }) {
+      return <ol className="list-decimal pl-6 mb-4">{children}</ol>;
+    },
+    
+    h1({ children }) {
+      return <h1 className="text-2xl font-bold mb-4">{children}</h1>;
+    },
+    
+    h2({ children }) {
+      return <h2 className="text-xl font-bold mb-3">{children}</h2>;
+    },
+    
+    h3({ children }) {
+      return <h3 className="text-lg font-bold mb-2">{children}</h3>;
+    }
+  };
+
+  const showCopyButton = message.role === 'assistant' && !isStreaming;
+
+  return (
+    <div className="flex gap-3">
+      <div className="flex gap-3 max-w-3xl flex-row">
+        <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-100">
+          {message.role === 'user' ? <User size={16} /> : <Bot size={16} />}
+        </div>
+        <div className="flex flex-col relative w-full">
+          <div className={`rounded-lg px-4 py-2 ${
+            message.role === 'user' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-100 text-gray-900'
+          }`}>
+            {showCopyButton && (
+              <button
+                onClick={handleCopy}
+                className="absolute top-2 right-1 p-1 rounded-md hover:bg-gray-200 transition-colors"
+                title={copied ? "Copied!" : "Copy to clipboard"}
+              >
+                {copied ? (
+                  <Check size={16} className="text-green-600" />
+                ) : (
+                  <Copy size={16} className="text-gray-500" />
+                )}
+              </button>
+            )}
+            <div className="text-sm">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                components={components}
+                className={`prose ${message.role === 'user' ? 'prose-invert' : ''} max-w-none`}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
+
 
 const ChatUI = () => {
   const [messages, setMessages] = useState([{
-    role: 'assistant', content: 'Welcome!'
+    role: 'assistant', content: `**Welcome! I am a Q&A bot**\n\nI have access to the tools to fetch reddit threads for topics and summarize them.\n\n**Available Threads:**\nYou can fetch them using their name. Example: "Get me threads for ClaudeAI"\n\n- Artifical\n- Bard\n- ClaudeAI\n- Deep Learning\n- Javascript\n- LocalLamma\n- Machine Learning\n- OpenAI\n- Python\n- RAG\n- React\n- Singularity\n\n If it's a general question, use No tool: Questions \n\n Note that I **do not have chat history** as of now.`
   }]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

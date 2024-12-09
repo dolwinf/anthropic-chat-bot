@@ -3,10 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from tool_config.tool_catalog import tools
-from tools.reddit import get_bard_reddit_threads
 import anthropic
 import os
 import uvicorn
+
+from utils.tool_select import handle_tool_call
 
 app = FastAPI()
 client = anthropic.Anthropic(api_key=os.getenv("SONNET_API_KEY"))
@@ -37,7 +38,7 @@ def chat_endpoint(query: ChatMessage):
                 "content": query.message
             }],
             model="claude-3-5-sonnet-20241022",
-            system="You are a general bot answering questions. Use the tools only if indiciation of words like Bard and reddit",
+            system="You are a general bot answering questions. Use the appropriate tool if needed to call based on the reddit thread name mentioned by the user",
             tools=tools
         ) as stream:
             for text in stream.text_stream:
@@ -47,7 +48,8 @@ def chat_endpoint(query: ChatMessage):
             final_response = stream.get_final_message()
             print(final_response)
             if final_response.stop_reason == "tool_use":
-                for data in get_bard_reddit_threads():
+                tool_name = final_response.content[1].name
+                for data in handle_tool_call(tool_name):
                     yield data
 
     return StreamingResponse(generate_response(), media_type="text/plain")
