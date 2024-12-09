@@ -3,10 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from tool_config.tool_catalog import tools
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 import anthropic
 import os
 import uvicorn
-
+import re
 from utils.tool_select import handle_tool_call
 
 app = FastAPI()
@@ -24,6 +28,32 @@ app.add_middleware(
 class ChatMessage(BaseModel):
     message: str
     conversation_id: str
+
+
+build_dir = Path(__file__).parent.parent / "client" / "build"
+
+
+if not build_dir.exists() or not build_dir.is_dir():
+    raise Exception(f"React build directory not found: {build_dir}")
+
+
+app.mount("/static", StaticFiles(directory=str(build_dir / "static")), name="static")
+
+
+@app.get("/")
+@app.get("/{full_path:path}")
+async def serve_app(full_path: str = ""):
+    index_file = build_dir / "index.html"
+
+    if full_path:
+        static_file = build_dir / full_path
+        if static_file.exists() and static_file.is_file() and not str(static_file).endswith('.html'):
+            return FileResponse(static_file)
+
+    if index_file.exists():
+        return FileResponse(index_file)
+    else:
+        raise HTTPException(status_code=404, detail="index.html not found")
 
 
 @app.post("/chat")
